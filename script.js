@@ -37,17 +37,39 @@ document.addEventListener('mousemove', (e) => {
 window.enviar = function() {
     let input = document.getElementById("palavra");
     let palavra = input.value.trim().toUpperCase();
-    
     if (palavra === "") return;
 
-    let novaEstrela = {
+    // 1. Define uma posição inicial aleatória
+    let novoX = Math.random() * 0.8 + 0.1;
+    let novoY = Math.random() * 0.8 + 0.1;
+
+    // 2. Lógica de Agrupamento: Se for "AVÓ TÂNIA", procura se já existe "AVÓ"
+    const termoBase = palavra.split(' ')[0]; 
+    const estrelaProxima = palavras.find(p => p.texto.includes(termoBase));
+
+    if (estrelaProxima) {
+        // Se encontrar algo parecido, coloca ao lado (distância de 5% a 10%)
+        novoX = parseFloat(estrelaProxima.x) + (Math.random() * 0.1 - 0.05);
+        novoY = parseFloat(estrelaProxima.y) + (Math.random() * 0.1 - 0.05);
+    } else {
+        // 3. Se não for agrupado, evita sobreposição aleatória com qualquer outra
+        palavras.forEach(p => {
+            let dist = Math.sqrt(Math.pow(novoX - p.x, 2) + Math.pow(novoY - p.y, 2));
+            if (dist < 0.1) { // Se estiver muito perto de qualquer estrela
+                novoX = Math.random() * 0.8 + 0.1; // Sorteia novo lugar
+                novoY = Math.random() * 0.8 + 0.1;
+            }
+        });
+    }
+
+    const novaEstrela = {
         texto: palavra,
-        x: (Math.random() * 0.8 + 0.1).toFixed(4), 
-        y: (Math.random() * 0.8 + 0.1).toFixed(4),
-        timestamp: Date.now() // Útil para ordem das linhas
+        x: novoX.toFixed(4),
+        y: novoY.toFixed(4),
+        timestamp: Date.now()
     };
 
-    push(estrelasRef, novaEstrela); // Envia para o banco coletivo
+    push(estrelasRef, novaEstrela); // Envia para o Firebase
     document.getElementById("msg").innerText = "Sua estrela subiu ao céu! ✨";
     input.value = "";
 };
